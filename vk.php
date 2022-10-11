@@ -75,8 +75,14 @@ class VK implements ClassAPIExtensionResult
             ] + Utils::array_filter($params)
         ]);
 
-        if ($res = json_decode(curl_exec($this->curl), true))
-            return $res;
+        try
+        {
+            if ($res = json_decode(curl_exec($this->curl), true))
+                return $res;
+        }
+        catch (Exception $e)
+        {
+        }
         exit(); // VK упал
     }
     
@@ -105,25 +111,31 @@ class VK implements ClassAPIExtensionResult
             curl_multi_add_handle($this->multiCurl, $curls[$i]);
         }
         
-        do
+        try
         {
-            $status = curl_multi_exec($this->multiCurl, $active);
-            if ($active)
-                curl_multi_select($this->multiCurl);
-        }
-        while ($active && $status === CURLM_OK);
+            do
+                {
+                $status = curl_multi_exec($this->multiCurl, $active);
+                if ($active)
+                    curl_multi_select($this->multiCurl);
+            }
+            while ($active && $status === CURLM_OK);
         
-        $i = -1;
-        $buffer = [];
-        while (isset($curls[++$i]))
-        {
-            $buffer[$i] = curl_multi_getcontent($curls[$i]);
-            curl_multi_remove_handle($this->multiCurl, $curls[$i]);
-            curl_close($curls[$i]);
-        }
+            $i = -1;
+            $buffer = [];
+               while (isset($curls[++$i]))
+               {
+                   $buffer[$i] = curl_multi_getcontent($curls[$i]);
+                curl_multi_remove_handle($this->multiCurl, $curls[$i]);
+                curl_close($curls[$i]);
+            }
 
-        if (Utils::array_filter($buffer))
-            return $buffer;
+            if (Utils::array_filter($buffer))
+                return $buffer;
+        }
+        catch (Exception $e)
+        {
+        }
         exit(); // VK упал
     }
 
@@ -324,11 +336,12 @@ class VK implements ClassAPIExtensionResult
         {
             $res = $this->send($msg, $params, $fromId);
             if (Utils::isChat($peerId))
-                $res[] = $this->send($this->getErrorArray($res) ? LANG_ENGINE[14] : LANG_ENGINE[15],
-                    $params, $peerId)[0];
+                $res[] = $this->send($this->getErrorArray($res) ? LANG_ENGINE[14] : LANG_ENGINE[15], $params, $peerId)[0];
         }
         else
+        {
             $res = $this->send($msg, $params, $peerId);
+        }
         
         return $res;
     }

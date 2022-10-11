@@ -1,4 +1,0 @@
-# BotEngineVK
-### dev
-
-В разработке

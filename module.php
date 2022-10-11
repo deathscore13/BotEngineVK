@@ -14,7 +14,7 @@ class Module
      * Нужен для Module::setTargets(), получения user_id из ссылки в Module::target(), peer_id чата в Module::log()
      * и отправки в VK ошибки в Module::error()
      * 
-     * @param VK &$vk           VK объект
+     * @param VK $vk           VK объект
      */
     public function setVK(VK $vk): void
     {
@@ -204,20 +204,15 @@ class Module
     }
 
     /**
-     * Подключает preload.php модуля
+     * Путь к preload модуля
      * 
      * @param string $name      Имя папки модуля
      * 
-     * @return bool             true если существует, false если нет
+     * @return string           Путь к preload модуля
      */
-    public function modulePreload(string $name): bool
+    public function pathPreload(string $name): string
     {
-        if (file_exists($path = 'modules/'.$name.'/preload.php'))
-        {
-            require_once($path);
-            return true;
-        }
-        return false;
+        return 'modules/'.$name.'/preload.php';
     }
     
     /**
@@ -310,7 +305,12 @@ class Module
         {
             if (!is_dir($dir = 'logs/'.($this->vk->obj['peer_id'] ?? $folder)))
                 mkdir($dir);
-            file_put_contents($dir.'/'.date('d.m.Y').'.log', date('[H:i:s]:    ').$text.PHP_EOL, FILE_APPEND);
+            
+            $dbg = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
+            $module = substr($dbg['file'], 0, strrpos($dbg['file'], '/'));
+            $module = substr($module, strrpos($module, '/') + 1);
+            
+            file_put_contents($dir.'/'.date('d.m.Y').'.log', date('H:i:s').' ['.$module.'] ('.$dbg['line'].'):    '.$text.PHP_EOL, FILE_APPEND);
         }
     }
     

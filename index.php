@@ -24,14 +24,12 @@ if (isset(($buffer = array_keys($_GET))[0]) &&
         require('vk.php');
         require('module.php');
         require('config.php');
+        require('database.php');
         
         $vk = new VK();
         ($m = new Module())->setVK($vk);
-        $db = new PDO('mysql:host='.CFG_ENGINE['db']['host'].':'.CFG_ENGINE['db']['port'].
-            ';dbname='.CFG_ENGINE['db']['database'].
-            ';charset='.CFG_ENGINE['db']['charset'],
-            CFG_ENGINE['db']['user'],
-            CFG_ENGINE['db']['pass']);
+        $db = new Database(CFG_ENGINE['db']['host'], CFG_ENGINE['db']['database'], CFG_ENGINE['db']['user'], CFG_ENGINE['db']['pass'],
+            CFG_ENGINE['db']['port'], CFG_ENGINE['db']['charset']);
         
         $vk->reply = CFG_ENGINE['reply'];
         $vk->typing = CFG_ENGINE['typing']['enable'];
@@ -46,7 +44,7 @@ else if ($buffer[0] !== '/botenginevk')
 
 require('configs/engine.php');
 $data = json_decode(file_get_contents('php://input'), true);
-if (!$data ||
+if (!$data || !isset($data['secret']) || !isset($data['group_id']) ||
     $data['secret'] !== CFG_ENGINE['secret'] ||
     $data['group_id'] !== CFG_ENGINE['group_id'])
     exit();
@@ -69,14 +67,12 @@ require('utils.php');
 require('vk.php');
 require('module.php');
 require('config.php');
+require('database.php');
 
 $vk = new VK();
 ($m = new Module())->setVK($vk);
-$db = new PDO('mysql:host='.CFG_ENGINE['db']['host'].':'.CFG_ENGINE['db']['port'].
-    ';dbname='.CFG_ENGINE['db']['database'].
-    ';charset='.CFG_ENGINE['db']['charset'],
-    CFG_ENGINE['db']['user'],
-    CFG_ENGINE['db']['pass']);
+$db = new Database(CFG_ENGINE['db']['host'], CFG_ENGINE['db']['database'], CFG_ENGINE['db']['user'], CFG_ENGINE['db']['pass'],
+    CFG_ENGINE['db']['port'], CFG_ENGINE['db']['charset']);
 
 $vk->reply = CFG_ENGINE['reply'];
 $vk->typing = CFG_ENGINE['typing']['enable'];
@@ -103,6 +99,7 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
         $vk->obj = $res + $vk->obj;
     
     $vk->setMembers($vk->obj['peer_id']);
+    $db->regChat($vk->obj['peer_id']);
     
     if (empty($vk->obj['text']) || !Utils::isUser($vk->obj['from_id']))
         goto skip_engine_cmd;
@@ -137,6 +134,7 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
                 'peerid',
                 LANG_ENGINE[32]
             ],
+            'params' => LANG_ENGINE[36],
             'description' => LANG_ENGINE[24]
         ],
         [
@@ -177,11 +175,17 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
             goto skip_engine_cmd;
         
         if ($m->param(1, ['analysis', LANG_ENGINE[31]]))
+        {
             $vk->send(LANG_ENGINE[13]);
+        }
         else if ($m->param(1, ['peerid', LANG_ENGINE[32]]))
-            $vk->send('peer_id = '.$vk->obj['peer_id']);
+        {
+            $vk->send(($target = $m->getTarget(1)) === false ? $vk->obj['peer_id'] : $target);
+        }
         else if ($m->param(1, ['info', LANG_ENGINE[33]]))
+        {
             $vk->send(LANG_ENGINE[2]);
+        }
         else if ($m->param(1, ['modules', LANG_ENGINE[34]]))
         {
             if ($hndl = opendir('modules'))
@@ -192,14 +196,19 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
                 {
                     if ($name !== '.' && $name !== '..' && $name !== '~callbacks')
                     {
-                        if (file_exists($path = 'modules/'.$name.'/preload.php') && is_array($res = require_once($path)))
+                        require_once($path = $m->pathPreload($name));
+                        
+                        if (defined($res = strtoupper($name).'_INFO'))
                         {
-                            if (!isset($res['name']))
+                            if (!isset(($res = constant($res))['name']))
                                 $res['name'] = $name;
+
                             $modules[++$i] = ['path' => substr($path, 0, -12)] + $res;
                         }
                         else
+                        {
                             $modules[++$i] = ['name' => $name, 'path' => substr($path, 0, -12)];
+                        }
                     }
                 }
                 closedir($hndl);
@@ -238,8 +247,8 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
             if ($hndl = opendir('modules'))
             {
                 while (($name = readdir($hndl)) !== false)
-                    if ($name !== '.' && $name !== '..' && $name !== '~callbacks' && file_exists($path = 'modules/'.$name.'/preload.php'))
-                        require_once($path);
+                    if ($name !== '.' && $name !== '..' && $name !== '~callbacks')
+                        require_once($m->pathPreload($name));
                 closedir($hndl);
             }
 
@@ -249,7 +258,10 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
             $vk->replyPM($send, CFG_ENGINE['bot']);
         }
         else
+        {
             $vk->send(LANG_ENGINE[3].$m->aboutCmd('bot'));
+        }
+
         exit();
     }
 skip_engine_cmd:
@@ -260,11 +272,13 @@ if ($hndl = opendir('modules'))
 {
     $exec = [];
     while (($name = readdir($hndl)) !== false)
-        if ($name !== '~callbacks' && file_exists($path = 'modules/'.$name.'/preload.php'))
+    {
+        if ($name !== '.' && $name !== '..' && $name !== '~callbacks')
         {
             $exec[] = $name;
-            require_once($path);
+            require_once($m->pathPreload($name));
         }
+    }
     
     $m->blockCmd();
     foreach ($exec as $name)
@@ -273,7 +287,7 @@ if ($hndl = opendir('modules'))
 
     rewinddir($hndl);
     while (($name = readdir($hndl)) !== false)
-        if ($name !== '~callbacks' && file_exists($path = 'modules/'.$name.'/'.$data['type'].'.php'))
+        if ($name !== '.' && $name !== '..' && $name !== '~callbacks' && file_exists($path = 'modules/'.$name.'/'.$data['type'].'.php'))
             require($path);
 
     closedir($hndl);

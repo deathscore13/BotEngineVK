@@ -8,7 +8,7 @@ Response time ~%.3f sec',
 Description: Bot for VK with open source and modular system
 Version: '.ENGINE_VERSION.'
 Author: DeathScore13
-URL: *link*',
+URL: https://github.com/deathscore13/BotEngineVK',
     /* 03 */    'Usage:'.PHP_EOL,
     /* 04 */    'Modules found %d:',
     /* 05 */    '⠀[%02d] "%s" (%s) by %s',
@@ -26,7 +26,7 @@ URL: %s
 Path: %s',
     /* 13 */    'Analysis has already been used, you stupid head',
     /* 14 */    'An error occurred while sending the message to the PM.
-Perhaps you have never written to the bot. Please send any message: vk.me/club'.CFG_ENGINE['group_id'],
+Perhaps you have never written to the bot or blocked sending messages. Please send any message: vk.me/club'.CFG_ENGINE['group_id'],
     /* 15 */    'Reply sent to PM',
     /* 16 */    'missing module: %s',
     /* 17 */    '%s <subcommand> - %s',
@@ -48,4 +48,5 @@ Perhaps you have never written to the bot. Please send any message: vk.me/club'.
     /* 33 */    'info',
     /* 34 */    'modules',
     /* 35 */    'commands',
+    /* 36 */    '[target]',
 ];
