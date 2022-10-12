@@ -307,9 +307,9 @@ class Module
                 mkdir($dir);
             
             $dbg = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
-            $file = substr($dbg['file'], strlen(substr($_SERVER['SCRIPT_FILENAME'], 0, -9)));
-            
-            file_put_contents($dir.'/'.date('d.m.Y').'.log', date('H:i:s').' ['.$file.'] ('.$dbg['line'].'):    '.$text.PHP_EOL, FILE_APPEND);
+            file_put_contents($dir.'/'.date('d.m.Y').'.log', date('H:i:s').' ['.
+                substr($dbg['file'], strlen(substr($_SERVER['SCRIPT_FILENAME'], 0, -9))).'] ('.$dbg['line'].'):    '.$text.PHP_EOL,
+                FILE_APPEND);
         }
     }
     
