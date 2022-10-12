@@ -7,11 +7,20 @@ abstract class Config
      * 
      * @param string $file      Имя файла из папки configs
      * 
-     * @return bool|array       true если настройки уже были загружены, массив с настройками если нет 
+     * @return bool             true если подключён, false если файл отсутствует
      */
-    public static function load(string $file): bool|array
+    public static function load(string $file): bool
     {
-        return require_once('configs/'.$file.'.php');
+        if (file_exists($file = 'configs/'.$file.'.php'))
+        {
+            require_once($file);
+
+            foreach (get_defined_vars() as $key => $value)
+                $GLOBALS[$key] = $value;
+            
+            return true;
+        }
+        return false;
     }
     
     /**
@@ -24,7 +33,7 @@ abstract class Config
      *                              pm - личные сообщения
      *                              every - везде
      * 
-     * @return array|bool   Массив с настройками для текущего чата или false, если настройки не были найдены
+     * @return array|bool       Массив с настройками для текущего чата или false, если настройки не были найдены
      */
     public static function parseByPeerId(int $peerId, array $config): array|bool
     {
