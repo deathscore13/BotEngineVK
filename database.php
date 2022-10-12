@@ -9,7 +9,7 @@ class Database extends PDO
      */
     public function __construct(string $host, string $database, string $user, string $pass, int $port = 3306, string $charset = 'utf8mb4')
     {
-        parent::__construct('mysql:host='.$host.':'.$port.';dbname='.$database.';charset='.$charset, $user, $pass);
+        parent::__construct('mysql:host='.$host.';port='.$port.';dbname='.$database.';charset='.$charset, $user, $pass);
         $this->exec('CREATE TABLE IF NOT EXISTS '.self::TABLE.' (id INT UNIQUE NOT NULL)');
     }
 
