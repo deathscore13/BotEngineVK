@@ -11,7 +11,7 @@ abstract class Config
      */
     public static function load(string $file): array
     {
-        return require('configs/'.$file.'.php');
+        return require_once('configs/'.$file.'.php');
     }
     
     /**
@@ -38,8 +38,10 @@ abstract class Config
             if (isset($config['chats']))
                 return $config['chats'];
         }
-        elseif (isset($config['pm']))
+        else if (isset($config['pm']))
+        {
             return $config['pm'];
+        }
         
         if (isset($config['every']))
             return $config['every'];
