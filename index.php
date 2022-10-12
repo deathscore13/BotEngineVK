@@ -180,7 +180,7 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
         }
         else if ($m->param(1, ['peerid', LANG_ENGINE[32]]))
         {
-            $vk->send(($target = $m->getTarget(1)) === false ? $vk->obj['peer_id'] : $target);
+            $vk->send(($target = $m->target(1)) === false ? $vk->obj['peer_id'] : $target);
         }
         else if ($m->param(1, ['info', LANG_ENGINE[33]]))
         {
@@ -194,7 +194,7 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
                 $modules = [];
                 while (($name = readdir($hndl)) !== false)
                 {
-                    if ($name !== '.' && $name !== '..' && $name !== '~callbacks')
+                    if ($name !== '.' && $name !== '..' && $name !== '~callbacks' && is_dir('modules/'.$name))
                     {
                         require_once($path = $m->pathPreload($name));
                         
@@ -247,8 +247,10 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
             if ($hndl = opendir('modules'))
             {
                 while (($name = readdir($hndl)) !== false)
-                    if ($name !== '.' && $name !== '..' && $name !== '~callbacks')
+                {
+                    if ($name !== '.' && $name !== '..' && $name !== '~callbacks' && is_dir('modules/'.$name))
                         require_once($m->pathPreload($name));
+                }
                 closedir($hndl);
             }
 
@@ -267,13 +269,12 @@ if ($data['type'] === 'message_new' || $data['type'] === 'message_reply')
 skip_engine_cmd:
 }
 
-
 if ($hndl = opendir('modules'))
 {
     $exec = [];
     while (($name = readdir($hndl)) !== false)
     {
-        if ($name !== '.' && $name !== '..' && $name !== '~callbacks')
+        if ($name !== '.' && $name !== '..' && $name !== '~callbacks' && is_dir('modules/'.$name))
         {
             $exec[] = $name;
             require_once($m->pathPreload($name));
@@ -287,8 +288,11 @@ if ($hndl = opendir('modules'))
 
     rewinddir($hndl);
     while (($name = readdir($hndl)) !== false)
-        if ($name !== '.' && $name !== '..' && $name !== '~callbacks' && file_exists($path = 'modules/'.$name.'/'.$data['type'].'.php'))
+    {
+        if ($name !== '.' && $name !== '..' && $name !== '~callbacks' && is_dir('modules/'.$name) &&
+            file_exists($path = 'modules/'.$name.'/'.$data['type'].'.php'))
             require($path);
+    }
 
     closedir($hndl);
 }

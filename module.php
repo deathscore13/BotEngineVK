@@ -249,7 +249,7 @@ class Module
      * 
      * @return bool|int         false если не найдена или недействительная, member_id пользователя/сообщества если найдена и действительна
      */
-    public function getTarget(int $num): bool|int
+    public function target(int $num): bool|int
     {
         $num -= 1;
 

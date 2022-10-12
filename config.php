@@ -13,11 +13,13 @@ abstract class Config
     {
         if (file_exists($file = 'configs/'.$file.'.php'))
         {
-            require_once($file);
+            if (!in_array($file, get_included_files()))
+            {
+                require($file);
 
-            foreach (get_defined_vars() as $key => $value)
-                $GLOBALS[$key] = $value;
-            
+                foreach (get_defined_vars() as $key => $value)
+                    $GLOBALS[$key] = $value;
+            }
             return true;
         }
         return false;
