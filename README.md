@@ -24,6 +24,12 @@
 2. MySQL.
 
 <br><br>
+### Официальные модули
+1. [Custom Commands](https://github.com/deathscore13/custom_commands);
+2. [Rights & Blocks](https://github.com/deathscore13/rights_and_blocks);
+3. [Source Connection](https://github.com/deathscore13/source_connection).
+
+<br><br>
 ### Установка и настройка
 1. Загружаем файлы на веб сервер (можно в отдельную папку, например **`botvk`**);
 2. Создаём сообщество, если его ещё нет;
